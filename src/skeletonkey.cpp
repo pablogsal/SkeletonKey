@@ -153,6 +153,7 @@ class EventLogger
     {
         if (!initialized_) return;
 
+        std::lock_guard<std::mutex> lock(write_mutex_);
         // Capture stack trace
         std::array<void*, MAX_STACK_DEPTH> stack;
         int depth = backtrace(stack.data(), MAX_STACK_DEPTH);
@@ -177,8 +178,6 @@ class EventLogger
         writer_.write(duration_ns);
         writer_.writeStack(stack.data(), depth);
 
-        // Atomic write
-        std::lock_guard<std::mutex> lock(write_mutex_);
         log_.write(reinterpret_cast<const char*>(writer_.data()), writer_.size());
         log_.flush();
     }
